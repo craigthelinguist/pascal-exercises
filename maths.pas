@@ -69,10 +69,8 @@ end;
       n : specifies n'th factorial to compute. *)
 function FactRec (n : Integer) : LongInt;
 begin
-   if ((n = 0) or (n = 1)) then
-      FactRec := 1
-   else
-      FactRec := n * FactRec(n-1);
+   if ((n = 0) or (n = 1)) then FactRec := 1
+   else FactRec := n * FactRec(n-1);
 end;
 
 (* Computes n choose k, the binomial choice function.
@@ -89,12 +87,9 @@ end;
    This is the number of ways to choose k-sized subsets from a set of size n. *)
 function BinomialRec (n : Integer; k : Integer) : LongInt;
 begin
-   if ((k=0) or (k=n)) then
-      BinomialRec := 1
-   else if ((k=1) or (k=n-1)) then
-      BinomialRec := n
-   else
-      BinomialRec := BinomialRec(n-1,k) + BinomialRec(n-1,k-1);
+   if ((k=0) or (k=n)) then BinomialRec := 1
+   else if ((k=1) or (k=n-1)) then BinomialRec := n
+   else BinomialRec := BinomialRec(n-1,k) + BinomialRec(n-1,k-1);
 end;
 
 (* Compute sum of first n computers using a closed-form expression.
@@ -126,10 +121,8 @@ end;
       n : specifies the n'th Fibonacci to compute. *)
 function FibRec (n : Integer) : Integer;
 begin
-   if ((n=1) or (n=0)) then
-      FibRec := 1
-   else
-      FibRec := FibRec(n-1) + FibRec(n-2)
+   if ((n=1) or (n=0)) then FibRec := 1
+   else FibRec := FibRec(n-1) + FibRec(n-2)
 end;
 
 (* Iteratively computes Fibonacci numbers.
