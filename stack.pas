@@ -51,6 +51,7 @@ begin
    nodePtr^.data := val;
    nodePtr^.next := stk.head;
    stk.head := nodePtr;
+   stk.size += 1;
 end;
 
 (* Look at the item on the top of the stack.
@@ -72,6 +73,7 @@ begin
    nodePtr := stk.head;
    stk.head := nodePtr^.next;
    Dispose(nodePtr);
+   stk.size -= 1;
 end;
 
 (* Check whether the stack is empty.
