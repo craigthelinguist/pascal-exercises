@@ -1,51 +1,92 @@
 
-program LinkedList;
+(* This is a stack of integers. *)
 
 type
 
+   P_Node = ^Node;
+
    Node = record
       data : Integer;
-      next : ^Node;
+      next : P_Node;
    end;
-
+   
    Stack = record
-      head : ^Node;
+      head : P_Node;
       size : Integer;
    end;
 
-(* Construct and return a new stack. *)
-function StackMake : Stack;
+(* Initialise a Stack.
+      stk : Stack to be initialised. *)
+procedure Stack_Init (var stk : Stack);
 begin
-   StackMake.head := Nil;
-   StackMake.size := 0;
+   stk.head := Nil;
+   stk.size := 0;
 end;
 
-(* Look at the top item on the stack, but don't remove it.
-      stk : stack to look at. *)
-function StackTop (stk : Stack) : Integer;
+(* Deallocate the contents of a stack.
+      stk : Stack to be destroyed. *)
+procedure Stack_Dispose (var stk : Stack);
+var
+   nodePtr, tmp : P_Node;
 begin
-   StackTop := (stk.head^).data;
+
+   { Deallocate each node in the stack. }
+   nodePtr := stk.head;
+   while (nodePtr <> Nil) do
+   begin
+      tmp := nodePtr^.next;
+      Dispose(nodePtr);
+      nodePtr := tmp;
+   end;
+
 end;
 
-(* Push integer onto the top of the stack.
-      stk : stack to push onto. *)
-procedure StackPush (i : Integer; var stk : Stack);
-var nodePtr, tmp : ^Node;
+(* Push an item onto the stack.
+      stk : Stack you're modifying.
+      val : item to push onto the stack. *)
+procedure Stack_Push (var stk : Stack; val : Integer);
+var nodePtr : P_Node;
 begin
-   tmp := stk.head;
    New(nodePtr);
-   (nodePtr^).next := tmp;
-   (nodePtr^).data := i;
+   nodePtr^.data := val;
+   nodePtr^.next := stk.head;
    stk.head := nodePtr;
 end;
 
-(* Pop and return top item on stack.
-      stk : stack to pop off. *)
-function StackPop (var stk : Stack) : Integer;
+(* Look at the item on the top of the stack.
+      stk : Stack you're looking at.
+      return : the item on top of the stack. *)
+function Stack_Peek (var stk : Stack) : Integer;
 begin
-   StackPop := (stk.head^).data;
-   stk.head := (stk.head^).next;
+   Stack_Peek := stk.head^.data;
 end;
 
+(* Remove the item on top of the stack and return it to
+   the caller.
+      stk : Stack to be popped.
+      return : the value that was on top of the stack. *)
+function Stack_Pop (var stk : Stack) : Integer;
+var nodePtr : P_Node;
 begin
-end.
+   Stack_Pop := stk.head^.data;
+   nodePtr := stk.head;
+   stk.head := nodePtr^.next;
+   Dispose(nodePtr);
+end;
+
+(* Check whether the stack is empty.
+      stk : Stack to check.
+      return : true if the stack has nothing in it. *)
+function Stack_IsEmpty (var stk : Stack) : Boolean;
+begin
+   Stack_IsEmpty := stk.size > 0;
+end;
+
+(* Check the size of the stack.
+      stk : Stack to check.
+      return : how many items are in the stack. *)
+function Stack_Size (var stk : Stack) : Integer;
+begin
+   Stack_Size := stk.size;
+end;
+
