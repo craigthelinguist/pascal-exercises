@@ -7,47 +7,83 @@ USES
    {- For FileExists function. -}
    sysutils;
 
+TYPE
+   FMode = (Overwrite, Append);
 
-   (* Copy the contents from one file to another.
-         file2read : name of file to copy from.
-         file2write : name of file to copy to. *)
-PROCEDURE FileCopy (
-   file2read, file2write : String
-);
+   (* Append contents of file in on to the end of fileout.
+         filein : file whose contents will be appended.
+         fileout : file to append onto.
+         returns : number of bytes written. *)
+FUNCTION FileAppend (
+   var filein, fileout : File
+) : Longint;
 VAR
-   num_read, num_written : SmallInt; {- Keep track of how much is being read/written. -}
-   total : Longint; {- Counts total number of bytes written. -}
+   num_read, num_written : SmallInt;
    buffer : Array[1..1024] of byte;
-   filein, fileout : File;
 BEGIN
+
    {- Initialise values. -}
    num_read := 0;
    num_written := 0;
-   total := 0;
+   FileAppend := 0;
 
-   {- Open files for reading and writing.
-      Specify logical records of the files to be 1 byte. -}
-   Assign (filein, file2read);
+   {- Open files for reading/writing.
+      Specify logical records to be 1 byte.
+      Move to end of output file for appending. -}
    Reset (filein, 1);
-   Assign (fileout, file2write);
+   Reset (fileout, 1);
+   Seek (fileout, filesize(fileout));
+
+   {- Copy contents from file1 -> file2. -}
+   Repeat
+      BlockRead (filein, buffer, Sizeof(buffer), num_read);
+      Blockwrite (fileout, buffer, num_read, num_written);
+      inc (FileAppend, num_written);
+   Until (num_read = 0) or (num_written <> num_read);
+
+END;
+
+
+   (* Copy contents from filein to fileout.
+      The contents of fileout will be overwritten.
+         filein : name of file to copy from.
+         fileout : name of file to copy to.
+         returns : number of bytes written. *)
+FUNCTION FileOverwrite (
+   var filein, fileout : File
+) : Longint;
+VAR
+   num_read, num_written : SmallInt; {- Keep track of how much is being read/written. -}
+   buffer : Array[1..1024] of byte;
+BEGIN
+
+   {- Initialise values. -}
+   num_read := 0;
+   num_written := 0;
+   FileOverwrite := 0;
+
+   {- Open files for reading/writing.
+      Specify logical records to be 1 byte. -}
+   Reset (filein, 1);
    Rewrite (fileout, 1);
 
    {- Copy contents from file1 -> file2. -}
    Repeat
       BlockRead (filein, buffer, Sizeof(buffer), num_read);
       Blockwrite (fileout, buffer, num_read, num_written);
-      inc (total, num_written);
+      inc (FileOverwrite, num_written);
    Until (num_read = 0) or (num_written <> num_read);
-   writeln ('Copied ', total, ' bytes in total.');
 
-   {- Close files. -}
-   close(filein);
-   close(fileout);
 END;
+
+
 
    (* Main *)
 VAR
    input : Char;
+   mode : FMode;
+   filein, fileout : File;
+   amt_written : longint;
 BEGIN
    {- Check cmd args. -}
    if ParamCount <> 2 then begin
@@ -61,18 +97,47 @@ BEGIN
       exit;   
    end;
 
-   {- If destination file exists, check if user wants to overwrite. -}
+   {- Default mode: append. -}
+   mode := Overwrite;
+
+   {- If destination file exists, check if user wants to overwrite or append. -}
    if FileExists (ParamStr(2)) then begin
       Writeln ('Destination file ', ParamStr(2), ' already exists!');
-      Writeln ('Overwrite anyway? (y/n)');
+      Writeln ('Do you want to overwrite, append, or quit? (o/a/q)');
       repeat
          Readln (input);
-      until ((input = 'y') or (input = 'n'));
-      if input = 'n' then exit;
+      until ((input = 'o') or (input = 'a') or (input = 'q'));
+      if input = 'q' then
+         begin
+            Writeln ('Aborting.');
+            exit;
+         end
+      else if input = 'a' then mode := Append
    end;
 
-   {- Begin copying. -}
-   Writeln ('Copying from ', ParamStr(1), ' to ', ParamStr(2));
-   FileCopy (ParamStr(1), ParamStr(2));
-   Writeln ('Finished copying contents.');
+   {- Open files. -}
+   Assign (filein, ParamStr(1));
+   Assign (fileout, ParamStr(2));
+
+   {- File writing. -}
+   {- Overwriting. -}
+   if mode = Overwrite then
+      begin
+         Writeln ('Copying from ', ParamStr(1), ' to ', ParamStr(2));
+         amt_written := FileOverwrite (filein, fileout);
+         Writeln ('Copied ', amt_written, ' bytes.');
+      end
+
+   {- Appending. -}
+   else if mode = Append then
+      begin
+         Writeln ('Appending ', ParamStr(1), ' onto ', ParamStr(2));
+         amt_written := FileAppend (filein, fileout);
+         Writeln ('Appended ', amt_written, ' bytes.');
+      end;
+
+   {- Close files. -}
+   Close (filein);
+   Close (fileout);
+
 END.
