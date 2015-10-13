@@ -88,7 +88,7 @@ BEGIN
    {- Check cmd args. -}
    if ParamCount <> 2 then begin
       Writeln ('Usage: fcopy <file_in> <file_out>');
-      exit;   
+      exit;
    end;
 
    {- Check source file exists. -}
@@ -119,22 +119,27 @@ BEGIN
    Assign (filein, ParamStr(1));
    Assign (fileout, ParamStr(2));
 
-   {- File writing. -}
-   {- Overwriting. -}
-   if mode = Overwrite then
-      begin
-         Writeln ('Copying from ', ParamStr(1), ' to ', ParamStr(2));
+   {- Do the file writing. -}
+   case mode of
+
+      Overwrite: begin
+         Writeln ('Copying from ', ParamStr(1), ' to ', ParamStr(2), '.');
          amt_written := FileOverwrite (filein, fileout);
          Writeln ('Copied ', amt_written, ' bytes.');
-      end
+      end;
 
-   {- Appending. -}
-   else if mode = Append then
-      begin
-         Writeln ('Appending ', ParamStr(1), ' onto ', ParamStr(2));
+      Append: begin
+         Writeln ('Appending ', ParamStr(1), ' onto ', ParamStr(2), '.');
          amt_written := FileAppend (filein, fileout);
          Writeln ('Appended ', amt_written, ' bytes.');
       end;
+
+      else begin
+         Writeln ('Unknown writing mode! Terminating.');
+         exit;
+      end;
+      
+   end;
 
    {- Close files. -}
    Close (filein);
